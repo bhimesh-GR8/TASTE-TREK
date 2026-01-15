@@ -35,7 +35,7 @@ export function DestinationCard({ destination }: DestinationCardProps) {
       remove.mutate(favoriteId);
     } else {
       add.mutate({
-        userId: user.claims.sub,
+        userId: user.id,
         itemId: destination.id,
         itemType: "destination",
       });

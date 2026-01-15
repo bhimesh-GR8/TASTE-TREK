@@ -40,7 +40,7 @@ export default function DestinationDetail() {
       remove.mutate(favoriteId);
     } else {
       add.mutate({
-        userId: user.claims.sub,
+        userId: user.id,
         itemId: id,
         itemType: "destination",
       });
@@ -77,7 +77,7 @@ export default function DestinationDetail() {
               </div>
               <div className="flex items-center text-white/90">
                 <MapPin className="h-4 w-4 mr-2" />
-                Coordinates: {destination.coordinates.lat.toFixed(2)}, {destination.coordinates.lng.toFixed(2)}
+                Coordinates: {destination.coordinates?.lat.toFixed(2)}, {destination.coordinates?.lng.toFixed(2)}
               </div>
             </div>
             <Button 

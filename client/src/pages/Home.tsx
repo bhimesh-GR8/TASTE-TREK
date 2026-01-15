@@ -9,8 +9,6 @@ import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { Icons } from '../components/Icons';
 
-<Icons.Compass className="h-6 w-6 text-primary" />
-
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
