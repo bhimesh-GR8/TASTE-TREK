@@ -2,6 +2,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { useCountries } from "@/hooks/use-trek-data";
 import { CountryCard } from "@/components/ui/CountryCard";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Icons } from '../components/Icons';
 
 export default function Countries() {
   const { data: countries, isLoading } = useCountries();
@@ -12,6 +13,7 @@ export default function Countries() {
       
       <div className="bg-muted/30 py-20 px-4 mb-12 border-b border-border/50">
         <div className="max-w-7xl mx-auto text-center">
+          <Icons.Compass className="h-6 w-6 text-primary mx-auto mb-4" />
           <h1 className="font-display text-4xl md:text-6xl font-bold mb-6">Explore Countries</h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Select a country to discover its unique culinary landscape and cultural heritage.

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Map, UtensilsCrossed } from "lucide-react";
 import { motion } from "framer-motion";
+import { Icons } from '../components/Icons';
 
 export default function CountryDetail() {
   const [, params] = useRoute("/country/:id");
@@ -67,6 +68,7 @@ export default function CountryDetail() {
             className="flex items-center gap-2 text-white/90 text-lg uppercase tracking-wider font-medium"
           >
             <Map className="h-5 w-5" />
+            <Icons.Compass className="h-6 w-6 text-primary" />
             <span>{country.continent}</span>
           </motion.div>
         </div>

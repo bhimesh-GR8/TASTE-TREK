@@ -7,6 +7,10 @@ import { CountryCard } from "@/components/ui/CountryCard";
 import { Search, ArrowRight, Utensils, Globe, Camera } from "lucide-react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
+import { Icons } from '../components/Icons';
+
+<Icons.Compass className="h-6 w-6 text-primary" />
+
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -224,7 +228,7 @@ export default function Home() {
       <footer className="bg-background py-12 border-t border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-2">
-            <Compass className="h-6 w-6 text-primary" />
+            <span className="h-6 w-6 text-primary">🧭</span>
             <span className="font-display font-bold text-xl">Taste Trek</span>
           </div>
           <div className="text-muted-foreground text-sm">

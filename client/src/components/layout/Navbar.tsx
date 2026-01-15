@@ -2,6 +2,7 @@ import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Compass, Heart, LogIn, LogOut, User, Menu } from "lucide-react";
+import { Icons } from '../Icons';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,7 +34,7 @@ export function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 group">
             <div className="bg-primary/10 p-2 rounded-xl group-hover:bg-primary/20 transition-colors">
-              <Compass className="h-6 w-6 text-primary" />
+              <Icons.Compass className="h-6 w-6 text-primary" />
             </div>
             <span className="font-display font-bold text-2xl tracking-tight text-foreground">
               Taste Trek

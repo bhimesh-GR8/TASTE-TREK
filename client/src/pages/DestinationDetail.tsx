@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, MapPin, Heart, Landmark, Utensils } from "lucide-react";
 import { motion } from "framer-motion";
+import { Icons } from '../components/Icons';
 
 export default function DestinationDetail() {
   const [, params] = useRoute("/destination/:id");
@@ -70,7 +71,10 @@ export default function DestinationDetail() {
           </Link>
           <div className="flex justify-between items-end">
             <div>
-              <h1 className="font-display text-5xl font-bold text-white mb-2">{destination.name}</h1>
+              <div className="flex items-center gap-3 mb-2">
+                <Icons.Compass className="h-6 w-6 text-primary" />
+                <h1 className="font-display text-5xl font-bold text-white">{destination.name}</h1>
+              </div>
               <div className="flex items-center text-white/90">
                 <MapPin className="h-4 w-4 mr-2" />
                 Coordinates: {destination.coordinates.lat.toFixed(2)}, {destination.coordinates.lng.toFixed(2)}
