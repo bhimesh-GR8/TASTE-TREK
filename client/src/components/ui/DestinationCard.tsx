@@ -6,6 +6,7 @@ import { useCheckFavorite, useToggleFavorite } from "@/hooks/use-trek-data";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
+import { useState } from "react";
 
 interface DestinationCardProps {
   destination: Destination;
@@ -16,6 +17,7 @@ export function DestinationCard({ destination }: DestinationCardProps) {
   const { toast } = useToast();
   const { data: favoriteStatus } = useCheckFavorite("destination", destination.id);
   const { add, remove } = useToggleFavorite();
+  const [imageError, setImageError] = useState(false);
 
   const isFavorite = favoriteStatus?.isFavorite;
   const favoriteId = favoriteStatus?.favoriteId;
@@ -51,17 +53,27 @@ export function DestinationCard({ destination }: DestinationCardProps) {
       transition={{ duration: 0.3 }}
     >
       <Link href={`/destination/${destination.id}`}>
-        <div className="group relative h-[400px] w-full overflow-hidden rounded-2xl bg-card shadow-lg cursor-pointer">
+        <div className="group relative h-[400px] w-full overflow-hidden rounded-2xl bg-gradient-to-br from-slate-200 to-slate-300 shadow-lg cursor-pointer">
           {/* Image */}
           <div className="absolute inset-0">
-            <img
-              src={destination.image}
-              alt={destination.name}
-              className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-            />
-            {/* Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80 transition-opacity group-hover:opacity-90" />
+            {!imageError ? (
+              <img
+                src={destination.image}
+                alt={destination.name}
+                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                onError={() => setImageError(true)}
+                crossOrigin="anonymous"
+                referrerPolicy="no-referrer"
+                loading="lazy"
+              />
+            ) : (
+              <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-orange-100 to-red-100">
+                <MapPin className="h-20 w-20 text-orange-400" />
+              </div>
+            )}
           </div>
+          {/* Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80 transition-opacity group-hover:opacity-90" />
 
           {/* Content */}
           <div className="absolute bottom-0 left-0 right-0 p-6 text-white transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">

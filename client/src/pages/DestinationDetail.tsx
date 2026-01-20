@@ -1,22 +1,28 @@
 import { useRoute, Link } from "wouter";
 import { Navbar } from "@/components/layout/Navbar";
-import { useDestination, useRestaurants, useCulturalSites, useCheckFavorite, useToggleFavorite } from "@/hooks/use-trek-data";
+import { useDestination, useRestaurants, useCulturalSites, useCheckFavorite, useToggleFavorite, useCountry } from "@/hooks/use-trek-data";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, MapPin, Heart, Landmark, Utensils } from "lucide-react";
+import { ArrowLeft, MapPin, Heart, Landmark, Utensils, Map } from "lucide-react";
 import { motion } from "framer-motion";
-import { Icons } from '../components/Icons';
+import { Icons } from "@/components/Icons";
+import { DestinationMap } from "@/components/ui/DestinationMap";
+import { useState } from "react";
 
 export default function DestinationDetail() {
   const [, params] = useRoute("/destination/:id");
   const id = Number(params?.id);
+  const [heroImageError, setHeroImageError] = useState(false);
+  const [restaurantImageErrors, setRestaurantImageErrors] = useState<Set<number>>(new Set());
+  const [culturalSiteImageErrors, setCulturalSiteImageErrors] = useState<Set<number>>(new Set());
   
   const { data: destination, isLoading: isDestLoading } = useDestination(id);
   const { data: restaurants } = useRestaurants(id);
   const { data: sites } = useCulturalSites(id);
+  const { data: country } = useCountry(destination?.countryId || 0);
   
   const { user } = useAuth();
   const { toast } = useToast();
@@ -39,10 +45,28 @@ export default function DestinationDetail() {
     if (isFavorite && favoriteId) {
       remove.mutate(favoriteId);
     } else {
-      add.mutate({
+      const favorite = {
         userId: user.id,
         itemId: id,
         itemType: "destination",
+      };
+      
+      // Also store country name in localStorage for display
+      const favorites = JSON.parse(localStorage.getItem("taste-trek-favorites") || "[]");
+      const newFav = {
+        id: Math.max(...favorites.map((f: any) => f.id || 0), 0) + 1,
+        ...favorite,
+        countryName: country?.name,
+        name: destination?.name,
+        image: destination?.image,
+      };
+      favorites.push(newFav);
+      localStorage.setItem("taste-trek-favorites", JSON.stringify(favorites));
+      
+      add.mutate(favorite);
+      toast({
+        title: "Added to favorites!",
+        description: `${destination?.name} has been saved.`,
       });
     }
   };
@@ -55,12 +79,21 @@ export default function DestinationDetail() {
       <Navbar />
 
       {/* Hero */}
-      <div className="relative h-[50vh] w-full">
-        <img 
-          src={destination.image} 
-          alt={destination.name} 
-          className="w-full h-full object-cover"
-        />
+      <div className="relative h-[50vh] w-full bg-gradient-to-br from-slate-200 to-slate-300">
+        {!heroImageError ? (
+          <img 
+            src={destination.image} 
+            alt={destination.name} 
+            className="w-full h-full object-cover"
+            onError={() => setHeroImageError(true)}
+            crossOrigin="anonymous"
+            referrerPolicy="no-referrer"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <MapPin className="h-24 w-24 text-orange-400 opacity-50" />
+          </div>
+        )}
         <div className="absolute inset-0 bg-black/40" />
         <div className="absolute inset-0 flex flex-col justify-end pb-12 px-4 max-w-7xl mx-auto">
            <Link href={`/country/${destination.countryId}`}>
@@ -74,10 +107,6 @@ export default function DestinationDetail() {
               <div className="flex items-center gap-3 mb-2">
                 <Icons.Compass className="h-6 w-6 text-primary" />
                 <h1 className="font-display text-5xl font-bold text-white">{destination.name}</h1>
-              </div>
-              <div className="flex items-center text-white/90">
-                <MapPin className="h-4 w-4 mr-2" />
-                Coordinates: {destination.coordinates?.lat.toFixed(2)}, {destination.coordinates?.lng.toFixed(2)}
               </div>
             </div>
             <Button 
@@ -106,6 +135,13 @@ export default function DestinationDetail() {
             <Tabs defaultValue="restaurants" className="w-full">
               <TabsList className="w-full justify-start h-12 bg-transparent border-b border-border p-0 mb-8 rounded-none space-x-8">
                 <TabsTrigger 
+                  value="map" 
+                  className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary text-lg px-0 rounded-none bg-transparent"
+                >
+                  <Map className="mr-2 h-4 w-4" />
+                  Map View
+                </TabsTrigger>
+                <TabsTrigger 
                   value="restaurants" 
                   className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary text-lg px-0 rounded-none bg-transparent"
                 >
@@ -119,58 +155,122 @@ export default function DestinationDetail() {
                 </TabsTrigger>
               </TabsList>
 
+              <TabsContent value="map" className="space-y-6">
+                <DestinationMap
+                  restaurants={restaurants || []}
+                  culturalSites={sites || []}
+                  destinationName={destination.name}
+                  centerLat={destination.coordinates?.lat || 40}
+                  centerLng={destination.coordinates?.lng || 0}
+                />
+                <div className="grid grid-cols-2 gap-4 mt-6">
+                  <div className="flex items-center gap-3 p-4 bg-card rounded-lg border border-border/50">
+                    <Utensils className="h-5 w-5 text-orange-500" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Restaurants</p>
+                      <p className="text-2xl font-bold">{restaurants?.length || 0}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-4 bg-card rounded-lg border border-border/50">
+                    <Landmark className="h-5 w-5 text-blue-500" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Cultural Sites</p>
+                      <p className="text-2xl font-bold">{sites?.length || 0}</p>
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+
               <TabsContent value="restaurants" className="space-y-6">
-                {restaurants?.map((restaurant) => (
-                  <motion.div 
-                    key={restaurant.id} 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex flex-col sm:flex-row gap-6 bg-card p-4 rounded-2xl border border-border/50 hover:shadow-md transition-shadow"
-                  >
-                    <div className="w-full sm:w-48 h-32 rounded-xl overflow-hidden flex-shrink-0">
-                      <img src={restaurant.imageUrl} alt={restaurant.name} className="w-full h-full object-cover" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-bold text-xl">{restaurant.name}</h3>
-                        <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20">{restaurant.priceRange}</Badge>
+                {restaurants?.map((restaurant) => {
+                  const hasImageError = restaurantImageErrors.has(restaurant.id);
+                  return (
+                    <motion.div 
+                      key={restaurant.id} 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex flex-col sm:flex-row gap-6 bg-card p-4 rounded-2xl border border-border/50 hover:shadow-md transition-shadow"
+                    >
+                      <div className="w-full sm:w-48 h-32 rounded-xl overflow-hidden flex-shrink-0 bg-gradient-to-br from-slate-200 to-slate-300">
+                        {!hasImageError ? (
+                          <img 
+                            src={restaurant.imageUrl} 
+                            alt={restaurant.name} 
+                            className="w-full h-full object-cover" 
+                            onError={() => {
+                              setRestaurantImageErrors(prev => new Set(prev).add(restaurant.id));
+                            }}
+                            crossOrigin="anonymous"
+                            referrerPolicy="no-referrer"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Utensils className="h-8 w-8 text-orange-400 opacity-50" />
+                          </div>
+                        )}
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
-                        <Utensils className="h-3 w-3" />
-                        <span>{restaurant.cuisine}</span>
+                      <div className="flex-1">
+                        <div className="flex justify-between items-start mb-2">
+                          <h3 className="font-bold text-xl">{restaurant.name}</h3>
+                          <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20">{restaurant.priceRange}</Badge>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
+                          <Utensils className="h-3 w-3" />
+                          <span>{restaurant.cuisine}</span>
+                        </div>
+                        <p className="text-muted-foreground text-sm line-clamp-2">{restaurant.description}</p>
                       </div>
-                      <p className="text-muted-foreground text-sm line-clamp-2">{restaurant.description}</p>
-                    </div>
-                  </motion.div>
-                ))}
+                    </motion.div>
+                  );
+                })}
               </TabsContent>
 
               <TabsContent value="culture" className="space-y-6">
-                {sites?.map((site) => (
-                  <motion.div 
-                    key={site.id} 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex flex-col sm:flex-row gap-6 bg-card p-4 rounded-2xl border border-border/50 hover:shadow-md transition-shadow"
-                  >
-                    <div className="w-full sm:w-48 h-32 rounded-xl overflow-hidden flex-shrink-0">
-                      <img src={site.imageUrl} alt={site.name} className="w-full h-full object-cover" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-bold text-xl">{site.name}</h3>
-                        {site.ticketPrice && (
-                          <Badge variant="outline">{site.ticketPrice}</Badge>
+                {sites?.map((site) => {
+                  const hasImageError = culturalSiteImageErrors.has(site.id);
+                  return (
+                    <motion.div 
+                      key={site.id} 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex flex-col sm:flex-row gap-6 bg-card p-4 rounded-2xl border border-border/50 hover:shadow-md transition-shadow"
+                    >
+                      <div className="w-full sm:w-48 h-32 rounded-xl overflow-hidden flex-shrink-0 bg-gradient-to-br from-slate-200 to-slate-300">
+                        {!hasImageError ? (
+                          <img 
+                            src={site.imageUrl} 
+                            alt={site.name} 
+                            className="w-full h-full object-cover" 
+                            onError={() => {
+                              setCulturalSiteImageErrors(prev => new Set(prev).add(site.id));
+                            }}
+                            crossOrigin="anonymous"
+                            referrerPolicy="no-referrer"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Landmark className="h-8 w-8 text-orange-400 opacity-50" />
+                          </div>
                         )}
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
-                        <Landmark className="h-3 w-3" />
-                        <span>Cultural Site</span>
+                      <div className="flex-1">
+                        <div className="flex justify-between items-start mb-2">
+                          <h3 className="font-bold text-xl">{site.name}</h3>
+                          {site.ticketPrice && (
+                            <Badge variant="outline">{site.ticketPrice}</Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
+                          <Landmark className="h-3 w-3" />
+                          <span>Cultural Site</span>
+                        </div>
+                        <p className="text-muted-foreground text-sm line-clamp-2">{site.description}</p>
                       </div>
-                      <p className="text-muted-foreground text-sm line-clamp-2">{site.description}</p>
-                    </div>
-                  </motion.div>
-                ))}
+                    </motion.div>
+                  );
+                })}
               </TabsContent>
             </Tabs>
           </div>

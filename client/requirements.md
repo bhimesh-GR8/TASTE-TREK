@@ -5,5 +5,5 @@ clsx | Utility for constructing className strings conditionally
 tailwind-merge | Utility for merging Tailwind classes safely
 
 ## Notes
-Auth is handled via Replit Auth (useAuth hook)
-Stock images will be sourced from Unsplash source API for "food", "travel", "culture"
+Auth is handled via OIDC authentication (useAuth hook)
+Images are sourced from Unsplash API for "food", "travel", "culture" themes

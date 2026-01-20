@@ -95,10 +95,10 @@ export function Navbar() {
               </DropdownMenu>
             ) : (
               <Button asChild className="rounded-full px-6 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25">
-                <a href="/api/login">
+                <Link href="/sign-in">
                   <LogIn className="mr-2 h-4 w-4" />
                   Sign In
-                </a>
+                </Link>
               </Button>
             )}
           </div>
@@ -144,7 +144,7 @@ export function Navbar() {
                     </div>
                   ) : (
                     <Button asChild className="w-full">
-                      <a href="/api/login">Sign In</a>
+                      <Link href="/sign-in">Sign In</Link>
                     </Button>
                   )}
                 </div>

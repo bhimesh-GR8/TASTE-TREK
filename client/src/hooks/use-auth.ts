@@ -1,24 +1,49 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import type { User } from "@shared/models/auth";
 
-async function fetchUser(): Promise<User | null> {
-  const response = await fetch("/api/auth/user", {
-    credentials: "include",
-  });
+// Simple local auth for development
+const LOCAL_USER_KEY = "taste-trek-user";
 
-  if (response.status === 401) {
+async function fetchUser(): Promise<User | null> {
+  // Try to get from localStorage first
+  const stored = localStorage.getItem(LOCAL_USER_KEY);
+  if (stored) {
+    try {
+      return JSON.parse(stored);
+    } catch {
+      localStorage.removeItem(LOCAL_USER_KEY);
+    }
+  }
+
+  // Try API endpoint (for OIDC authentication if available)
+  try {
+    const response = await fetch("/api/auth/user", {
+      credentials: "include",
+    });
+
+    if (response.status === 401) {
+      return null;
+    }
+
+    if (!response.ok) {
+      throw new Error(`${response.status}: ${response.statusText}`);
+    }
+
+    return response.json();
+  } catch {
     return null;
   }
-
-  if (!response.ok) {
-    throw new Error(`${response.status}: ${response.statusText}`);
-  }
-
-  return response.json();
 }
 
 async function logout(): Promise<void> {
-  window.location.href = "/api/logout";
+  localStorage.removeItem(LOCAL_USER_KEY);
+  // Try API logout if available
+  try {
+    window.location.href = "/api/logout";
+  } catch {
+    window.location.reload();
+  }
 }
 
 export function useAuth() {

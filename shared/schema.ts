@@ -101,7 +101,7 @@ export type InsertCulturalSite = z.infer<typeof insertCulturalSiteSchema>;
 // --- Favorites ---
 export const favorites = pgTable("favorites", {
   id: serial("id").primaryKey(),
-  userId: text("user_id").notNull().references(() => users.id), // String ID from Replit Auth
+  userId: text("user_id").notNull().references(() => users.id), // String ID from OIDC provider
   itemId: integer("item_id").notNull(), // Can be countryId or destinationId
   itemType: text("item_type").notNull(), // 'country' | 'destination'
   createdAt: timestamp("created_at").defaultNow(),

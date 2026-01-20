@@ -7,11 +7,15 @@ import { CountryCard } from "@/components/ui/CountryCard";
 import { Search, ArrowRight, Utensils, Globe, Camera } from "lucide-react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { Icons } from '../components/Icons';
+import { Icons } from "@/components/Icons";
 
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [heroImageError, setHeroImageError] = useState(false);
+  const [countryImageErrors, setCountryImageErrors] = useState<Set<number>>(new Set());
+  const [destImageErrors, setDestImageErrors] = useState<Set<number>>(new Set());
+  
   const { data: searchResults, isLoading: isSearching } = useSearch(searchQuery);
   const { data: countries, isLoading: isCountriesLoading } = useCountries();
 
@@ -23,16 +27,28 @@ export default function Home() {
       <Navbar />
 
       {/* Hero Section */}
-      <section className="relative h-[90vh] flex items-center justify-center overflow-hidden">
+      <section className="relative h-[90vh] flex items-center justify-center overflow-hidden bg-gradient-to-br from-slate-200 to-slate-300">
         {/* Background Image with Overlay */}
         <div className="absolute inset-0 z-0">
           {/* Unsplash: Scenic landscape with food elements */}
-          <img 
-            src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=2070&auto=format&fit=crop" 
-            alt="Hero Background" 
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
+          {!heroImageError ? (
+            <>
+              <img 
+                src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=2070&auto=format&fit=crop" 
+                alt="Hero Background" 
+                className="w-full h-full object-cover"
+                onError={() => setHeroImageError(true)}
+                crossOrigin="anonymous"
+              />
+              <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
+            </>
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <div className="text-center text-white/50">
+                <Utensils className="h-24 w-24 mx-auto mb-4 opacity-30" />
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="relative z-10 w-full max-w-4xl px-4 text-center">
@@ -85,28 +101,60 @@ export default function Home() {
                   <div className="p-4 text-center text-muted-foreground">No results found.</div>
                 ) : (
                   <div className="max-h-[300px] overflow-y-auto">
-                    {searchResults?.countries.map(country => (
-                      <Link key={country.id} href={`/country/${country.id}`}>
-                        <div className="flex items-center gap-3 p-3 hover:bg-muted/50 rounded-lg cursor-pointer transition-colors">
-                          <img src={country.heroImage} className="w-10 h-10 rounded-full object-cover" alt={country.name} />
-                          <div className="text-left">
-                            <p className="font-semibold text-foreground">{country.name}</p>
-                            <p className="text-xs text-muted-foreground">Country</p>
+                    {searchResults?.countries.map(country => {
+                      const hasImageError = countryImageErrors.has(country.id);
+                      return (
+                        <Link key={country.id} href={`/country/${country.id}`}>
+                          <div className="flex items-center gap-3 p-3 hover:bg-muted/50 rounded-lg cursor-pointer transition-colors">
+                            {!hasImageError ? (
+                              <img 
+                                src={country.heroImage} 
+                                className="w-10 h-10 rounded-full object-cover" 
+                                alt={country.name}
+                                onError={() => {
+                                  setCountryImageErrors(prev => new Set(prev).add(country.id));
+                                }}
+                              />
+                            ) : (
+                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-100 to-red-100 flex items-center justify-center">
+                                <span className="text-xs font-bold text-orange-600">{country.name.charAt(0)}</span>
+                              </div>
+                            )}
+                            <div className="text-left">
+                              <p className="font-semibold text-foreground">{country.name}</p>
+                              <p className="text-xs text-muted-foreground">Country</p>
+                            </div>
                           </div>
-                        </div>
-                      </Link>
-                    ))}
-                    {searchResults?.destinations.map(dest => (
-                      <Link key={dest.id} href={`/destination/${dest.id}`}>
-                        <div className="flex items-center gap-3 p-3 hover:bg-muted/50 rounded-lg cursor-pointer transition-colors">
-                          <img src={dest.image} className="w-10 h-10 rounded-full object-cover" alt={dest.name} />
-                          <div className="text-left">
-                            <p className="font-semibold text-foreground">{dest.name}</p>
-                            <p className="text-xs text-muted-foreground">Destination</p>
+                        </Link>
+                      );
+                    })}
+                    {searchResults?.destinations.map(dest => {
+                      const hasImageError = destImageErrors.has(dest.id);
+                      return (
+                        <Link key={dest.id} href={`/destination/${dest.id}`}>
+                          <div className="flex items-center gap-3 p-3 hover:bg-muted/50 rounded-lg cursor-pointer transition-colors">
+                            {!hasImageError ? (
+                              <img 
+                                src={dest.image} 
+                                className="w-10 h-10 rounded-full object-cover" 
+                                alt={dest.name}
+                                onError={() => {
+                                  setDestImageErrors(prev => new Set(prev).add(dest.id));
+                                }}
+                              />
+                            ) : (
+                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-100 to-red-100 flex items-center justify-center">
+                                <span className="text-xs font-bold text-orange-600">{dest.name.charAt(0)}</span>
+                              </div>
+                            )}
+                            <div className="text-left">
+                              <p className="font-semibold text-foreground">{dest.name}</p>
+                              <p className="text-xs text-muted-foreground">Destination</p>
+                            </div>
                           </div>
-                        </div>
-                      </Link>
-                    ))}
+                        </Link>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -231,11 +279,6 @@ export default function Home() {
           </div>
           <div className="text-muted-foreground text-sm">
             © {new Date().getFullYear()} Taste Trek. All rights reserved.
-          </div>
-          <div className="flex gap-6">
-            <a href="#" className="text-muted-foreground hover:text-primary transition-colors">Instagram</a>
-            <a href="#" className="text-muted-foreground hover:text-primary transition-colors">Twitter</a>
-            <a href="#" className="text-muted-foreground hover:text-primary transition-colors">Facebook</a>
           </div>
         </div>
       </footer>

@@ -4,13 +4,16 @@ import { useCountry, useCountryDestinations } from "@/hooks/use-trek-data";
 import { DestinationCard } from "@/components/ui/DestinationCard";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Map, UtensilsCrossed } from "lucide-react";
+import { ArrowLeft, Map, UtensilsCrossed, MapPin } from "lucide-react";
 import { motion } from "framer-motion";
-import { Icons } from '../components/Icons';
+import { Icons } from "@/components/Icons";
+import { useState } from "react";
 
 export default function CountryDetail() {
   const [, params] = useRoute("/country/:id");
   const id = Number(params?.id);
+  const [heroImageError, setHeroImageError] = useState(false);
+  const [foodImageError, setFoodImageError] = useState(false);
   
   const { data: country, isLoading: isCountryLoading } = useCountry(id);
   const { data: destinations, isLoading: isDestLoading } = useCountryDestinations(id);
@@ -39,12 +42,20 @@ export default function CountryDetail() {
       <Navbar />
 
       {/* Hero Header */}
-      <div className="relative h-[60vh] w-full overflow-hidden">
-        <img 
-          src={country.heroImage} 
-          alt={country.name} 
-          className="w-full h-full object-cover"
-        />
+      <div className="relative h-[60vh] w-full overflow-hidden bg-gradient-to-br from-slate-200 to-slate-300">
+        {!heroImageError ? (
+          <img 
+            src={country.heroImage} 
+            alt={country.name} 
+            className="w-full h-full object-cover"
+            onError={() => setHeroImageError(true)}
+            crossOrigin="anonymous"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <MapPin className="h-24 w-24 text-orange-400 opacity-50" />
+          </div>
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-black/40 to-black/20" />
         
         <div className="absolute inset-0 flex flex-col justify-end pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
@@ -61,16 +72,6 @@ export default function CountryDetail() {
           >
             {country.name}
           </motion.h1>
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="flex items-center gap-2 text-white/90 text-lg uppercase tracking-wider font-medium"
-          >
-            <Map className="h-5 w-5" />
-            <Icons.Compass className="h-6 w-6 text-primary" />
-            <span>{country.continent}</span>
-          </motion.div>
         </div>
       </div>
 
@@ -123,11 +124,19 @@ export default function CountryDetail() {
             </div>
             <div className="flex-1 relative">
               <div className="absolute inset-0 bg-accent/20 rounded-full blur-3xl transform rotate-12" />
-              <img 
-                src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=1000&auto=format&fit=crop" 
-                alt="Food of the region" 
-                className="relative rounded-2xl shadow-2xl transform hover:scale-105 transition-transform duration-500"
-              />
+              {!foodImageError ? (
+                <img 
+                  src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=1000&auto=format&fit=crop" 
+                  alt="Food of the region" 
+                  className="relative rounded-2xl shadow-2xl transform hover:scale-105 transition-transform duration-500"
+                  onError={() => setFoodImageError(true)}
+                  crossOrigin="anonymous"
+                />
+              ) : (
+                <div className="relative rounded-2xl shadow-2xl h-96 w-full bg-gradient-to-br from-orange-100 to-red-100 flex items-center justify-center">
+                  <MapPin className="h-16 w-16 text-orange-400" />
+                </div>
+              )}
             </div>
           </div>
         </section>

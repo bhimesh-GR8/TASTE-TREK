@@ -100,14 +100,38 @@ export function useSearch(query: string) {
 }
 
 // --- Favorites ---
+const FAVORITES_KEY = "taste-trek-favorites";
+
+function getLocalFavorites(): Favorite[] {
+  try {
+    const stored = localStorage.getItem(FAVORITES_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+}
+
+function setLocalFavorites(favorites: Favorite[]) {
+  localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
+}
+
 export function useFavorites() {
   return useQuery({
     queryKey: [api.favorites.list.path],
     queryFn: async () => {
-      const res = await fetch(api.favorites.list.path, { credentials: "include" });
-      if (res.status === 401) return []; // Return empty if not authorized
-      if (!res.ok) throw new Error("Failed to fetch favorites");
-      return api.favorites.list.responses[200].parse(await res.json());
+      // Try API first (for authenticated users)
+      try {
+        const res = await fetch(api.favorites.list.path, { credentials: "include" });
+        if (res.status === 401) {
+          // Fall back to localStorage if not authenticated
+          return getLocalFavorites();
+        }
+        if (!res.ok) throw new Error("Failed to fetch favorites");
+        return api.favorites.list.responses[200].parse(await res.json());
+      } catch {
+        // Fall back to localStorage on any error
+        return getLocalFavorites();
+      }
     },
   });
 }
@@ -117,11 +141,24 @@ export function useCheckFavorite(type: 'country' | 'destination', id: number) {
     queryKey: ['check-favorite', type, id],
     enabled: !!id,
     queryFn: async () => {
-      const url = buildUrl(api.favorites.check.path, { type, id });
-      const res = await fetch(url, { credentials: "include" });
-      if (res.status === 401) return { isFavorite: false };
-      if (!res.ok) throw new Error("Failed to check favorite");
-      return api.favorites.check.responses[200].parse(await res.json());
+      // Check both API and localStorage
+      const favorites = getLocalFavorites();
+      const isFavorite = favorites.some(fav => fav.itemType === type && fav.itemId === id);
+      
+      if (isFavorite) {
+        return { isFavorite: true };
+      }
+
+      // Also check API if authenticated
+      try {
+        const url = buildUrl(api.favorites.check.path, { type, id });
+        const res = await fetch(url, { credentials: "include" });
+        if (res.status === 401) return { isFavorite: false };
+        if (!res.ok) throw new Error("Failed to check favorite");
+        return api.favorites.check.responses[200].parse(await res.json());
+      } catch {
+        return { isFavorite };
+      }
     },
   });
 }
@@ -132,14 +169,30 @@ export function useToggleFavorite() {
   // Add favorite
   const add = useMutation({
     mutationFn: async (data: InsertFavorite) => {
-      const res = await fetch(api.favorites.create.path, {
-        method: api.favorites.create.method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error('Failed to add favorite');
-      return api.favorites.create.responses[201].parse(await res.json());
+      // Store locally first
+      const favorites = getLocalFavorites();
+      const newFavorite: Favorite = {
+        id: Math.max(...favorites.map(f => f.id || 0), 0) + 1,
+        ...data,
+      } as Favorite;
+      
+      favorites.push(newFavorite);
+      setLocalFavorites(favorites);
+
+      // Try to sync with API
+      try {
+        const res = await fetch(api.favorites.create.path, {
+          method: api.favorites.create.method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+          credentials: "include",
+        });
+        if (!res.ok) throw new Error('Failed to add favorite');
+        return api.favorites.create.responses[201].parse(await res.json());
+      } catch {
+        // Still consider it a success since we saved locally
+        return newFavorite;
+      }
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: [api.favorites.list.path] });
@@ -150,12 +203,22 @@ export function useToggleFavorite() {
   // Remove favorite
   const remove = useMutation({
     mutationFn: async (id: number) => {
-      const url = buildUrl(api.favorites.delete.path, { id });
-      const res = await fetch(url, {
-        method: api.favorites.delete.method,
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error('Failed to remove favorite');
+      // Remove from localStorage
+      const favorites = getLocalFavorites();
+      const filtered = favorites.filter(f => f.id !== id);
+      setLocalFavorites(filtered);
+
+      // Try to sync with API
+      try {
+        const url = buildUrl(api.favorites.delete.path, { id });
+        const res = await fetch(url, {
+          method: api.favorites.delete.method,
+          credentials: "include",
+        });
+        if (!res.ok) throw new Error('Failed to remove favorite');
+      } catch {
+        // Still consider it a success since we removed locally
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [api.favorites.list.path] });

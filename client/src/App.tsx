@@ -10,11 +10,13 @@ import Countries from "@/pages/Countries";
 import CountryDetail from "@/pages/CountryDetail";
 import DestinationDetail from "@/pages/DestinationDetail";
 import Favorites from "@/pages/Favorites";
+import { SignIn } from "@/pages/SignIn";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/sign-in" component={SignIn} />
       <Route path="/countries" component={Countries} />
       <Route path="/country/:id" component={CountryDetail} />
       <Route path="/destination/:id" component={DestinationDetail} />

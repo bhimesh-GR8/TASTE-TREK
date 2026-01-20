@@ -2,7 +2,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { useCountries } from "@/hooks/use-trek-data";
 import { CountryCard } from "@/components/ui/CountryCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Icons } from '../components/Icons';
+import { Icons } from "@/components/Icons";
 
 export default function Countries() {
   const { data: countries, isLoading } = useCountries();
