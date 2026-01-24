@@ -2,10 +2,5 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
-  "devCommand": "npm run dev",
-  "env": {
-    "DATABASE_URL": "@database_url",
-    "REPLIT_AUTH_CLIENT_ID": "@replit_auth_client_id",
-    "REPLIT_AUTH_CLIENT_SECRET": "@replit_auth_client_secret"
-  }
+  "devCommand": "npm run dev"
 }
