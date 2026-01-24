@@ -1,4 +1,15 @@
 {
   "buildCommand": "npm run build",
-  "outputDirectory": "dist"
+  "outputDirectory": "dist",
+  "public": "dist/public",
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/index.cjs"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.cjs"
+    }
+  ]
 }
