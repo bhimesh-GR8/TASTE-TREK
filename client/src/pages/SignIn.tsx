@@ -74,14 +74,17 @@ export function SignIn() {
         const existingUser = JSON.parse(stored);
         if (existingUser.email !== email) {
           setError("Email not found. Please sign up first.");
+          setIsLoading(false);
           return;
         }
         if (btoa(password) !== existingUser.password) {
           setError("Incorrect password");
+          setIsLoading(false);
           return;
         }
       } else {
         setError("Email not found. Please sign up first.");
+        setIsLoading(false);
         return;
       }
     }
