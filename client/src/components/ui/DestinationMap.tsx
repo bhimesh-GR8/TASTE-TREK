@@ -76,14 +76,14 @@ export function DestinationMap({
   return (
     <div className="w-full h-96 rounded-2xl overflow-hidden border border-border/50 shadow-md">
       <MapContainer
-        center={[coords.lat, coords.lng] as [number, number]}
+        center={[coords.lat, coords.lng] as any}
         zoom={13}
         scrollWheelZoom={true}
         style={{ height: '100%', width: '100%' }}
       >
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; OpenStreetMap contributors'
+          attribution={'&copy; OpenStreetMap contributors' as any}
         />
 
         {markers.map((marker) => (

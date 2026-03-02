@@ -15,6 +15,7 @@ export function useCountries() {
   return useQuery({
     queryKey: ["countries"],
     queryFn: async () => {
+      console.log("fetching countries data");
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 100));
       return mockCountriesData;
@@ -163,7 +164,7 @@ export function useToggleFavorite() {
         id: Math.max(...favorites.map(f => f.id || 0), 0) + 1,
         ...data,
         userId: "local-user",
-        createdAt: new Date(),
+        createdAt: new Date().toISOString(),
       } as Favorite;
       
       favorites.push(newFavorite);

@@ -48,7 +48,7 @@ export default function DestinationDetail() {
       const favorite = {
         userId: user.id,
         itemId: id,
-        itemType: "destination",
+        itemType: "destination" as const,
       };
       
       // Also store country name in localStorage for display
