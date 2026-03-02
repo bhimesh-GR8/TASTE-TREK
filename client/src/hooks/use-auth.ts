@@ -43,9 +43,19 @@ async function fetchUser(): Promise<User | null> {
 }
 
 async function logout(): Promise<void> {
+  try {
+    // Call the logout API endpoint to clear session on server
+    await fetch("/api/logout", { method: "GET" });
+  } catch (error) {
+    console.error("Logout error:", error);
+  }
+  
+  // Clear local storage
   localStorage.removeItem(LOCAL_USER_KEY);
   localStorage.removeItem(SESSION_KEY);
-  window.location.href = "/sign-in";
+  
+  // Redirect to home
+  window.location.href = "/";
 }
 
 export function useAuth() {
