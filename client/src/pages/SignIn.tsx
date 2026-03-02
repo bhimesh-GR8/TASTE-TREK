@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,20 @@ export function SignIn() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
+
+  // Load saved email on component mount
+  useEffect(() => {
+    const savedCredentials = localStorage.getItem("taste-trek-credentials");
+    if (savedCredentials) {
+      try {
+        const { email: savedEmail, name: savedName } = JSON.parse(savedCredentials);
+        setEmail(savedEmail);
+        setName(savedName);
+      } catch (err) {
+        console.error("Error loading saved credentials", err);
+      }
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,6 +109,12 @@ export function SignIn() {
       token: `token-${Date.now()}`,
       userId: user.id,
       signedInAt: new Date().toISOString(),
+    }));
+
+    // Save email and name for next login
+    localStorage.setItem("taste-trek-credentials", JSON.stringify({
+      email,
+      name,
     }));
 
     // Invalidate auth query to force refresh
