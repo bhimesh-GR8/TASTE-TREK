@@ -1,12 +1,35 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
 import type { User } from "@shared/models/auth";
 
-// Simple local auth for development
+// Local user storage key
 const LOCAL_USER_KEY = "taste-trek-user";
+const SESSION_KEY = "taste-trek-session";
 
 async function fetchUser(): Promise<User | null> {
-  // Try to get from localStorage first
+  // Check if session is still valid
+  const session = localStorage.getItem(SESSION_KEY);
+  if (!session) {
+    localStorage.removeItem(LOCAL_USER_KEY);
+    return null;
+  }
+
+  try {
+    const sessionData = JSON.parse(session);
+    // Session expires after 30 days
+    const signedInTime = new Date(sessionData.signedInAt).getTime();
+    const now = new Date().getTime();
+    const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+
+    if (now - signedInTime > thirtyDays) {
+      localStorage.removeItem(LOCAL_USER_KEY);
+      localStorage.removeItem(SESSION_KEY);
+      return null;
+    }
+  } catch {
+    localStorage.removeItem(SESSION_KEY);
+  }
+
+  // Get user from localStorage
   const stored = localStorage.getItem(LOCAL_USER_KEY);
   if (stored) {
     try {
@@ -16,49 +39,29 @@ async function fetchUser(): Promise<User | null> {
     }
   }
 
-  // Try API endpoint (for OIDC authentication if available)
-  try {
-    const response = await fetch("/api/auth/user", {
-      credentials: "include",
-    });
-
-    if (response.status === 401) {
-      return null;
-    }
-
-    if (!response.ok) {
-      throw new Error(`${response.status}: ${response.statusText}`);
-    }
-
-    return response.json();
-  } catch {
-    return null;
-  }
+  return null;
 }
 
 async function logout(): Promise<void> {
   localStorage.removeItem(LOCAL_USER_KEY);
-  // Try API logout if available
-  try {
-    window.location.href = "/api/logout";
-  } catch {
-    window.location.reload();
-  }
+  localStorage.removeItem(SESSION_KEY);
+  window.location.href = "/sign-in";
 }
 
 export function useAuth() {
   const queryClient = useQueryClient();
+
   const { data: user, isLoading } = useQuery<User | null>({
-    queryKey: ["/api/auth/user"],
+    queryKey: ["auth-user"],
     queryFn: fetchUser,
     retry: false,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 0, // Always refetch on invalidation
   });
 
   const logoutMutation = useMutation({
     mutationFn: logout,
     onSuccess: () => {
-      queryClient.setQueryData(["/api/auth/user"], null);
+      queryClient.setQueryData(["auth-user"], null);
     },
   });
 
@@ -70,3 +73,4 @@ export function useAuth() {
     isLoggingOut: logoutMutation.isPending,
   };
 }
+

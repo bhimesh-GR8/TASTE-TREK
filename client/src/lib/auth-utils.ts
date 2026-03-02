@@ -13,3 +13,5 @@ export function redirectToLogin(toast?: (options: { title: string; description: 
   }
   setTimeout(() => {
     window.location.href = "/sign-in";
+  }, 1000);
+}
