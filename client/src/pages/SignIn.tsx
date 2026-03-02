@@ -70,46 +70,72 @@ export function SignIn() {
   };
 
   const authenticateLocally = () => {
-    // Store user in localStorage (persists across sessions)
-    const user = {
-      id: `user-${Date.now()}`,
-      email,
-      firstName: name.split(" ")[0],
-      lastName: name.split(" ").slice(1).join(" "),
-      password: btoa(password), // Basic encoding (NOT for production)
-      profileImageUrl: `https://avatar.vercel.sh/${encodeURIComponent(email)}`,
-      createdAt: new Date().toISOString(),
-    };
+    // Get all registered users (persists even after logout)
+    const usersRegistry = localStorage.getItem("taste-trek-users");
+    let allUsers: any[] = [];
+    
+    if (usersRegistry) {
+      try {
+        allUsers = JSON.parse(usersRegistry);
+      } catch (err) {
+        console.error("Error parsing users registry", err);
+      }
+    }
 
     // Check if user already exists (for sign in)
     if (!isSignUp) {
-      const stored = localStorage.getItem("taste-trek-user");
-      if (stored) {
-        const existingUser = JSON.parse(stored);
-        if (existingUser.email !== email) {
-          setError("Email not found. Please sign up first.");
-          setIsLoading(false);
-          return;
-        }
-        if (btoa(password) !== existingUser.password) {
-          setError("Incorrect password");
-          setIsLoading(false);
-          return;
-        }
-      } else {
+      const existingUser = allUsers.find(u => u.email === email);
+      
+      if (!existingUser) {
         setError("Email not found. Please sign up first.");
         setIsLoading(false);
         return;
       }
-    }
+      
+      if (btoa(password) !== existingUser.password) {
+        setError("Incorrect password");
+        setIsLoading(false);
+        return;
+      }
+      
+      // User validated, create session
+      localStorage.setItem("taste-trek-user", JSON.stringify(existingUser));
+      localStorage.setItem("taste-trek-session", JSON.stringify({
+        token: `token-${Date.now()}`,
+        userId: existingUser.id,
+        signedInAt: new Date().toISOString(),
+      }));
+    } else {
+      // New user registration
+      const existingUser = allUsers.find(u => u.email === email);
+      if (existingUser) {
+        setError("Email already registered. Please sign in instead.");
+        setIsLoading(false);
+        return;
+      }
 
-    // Store user session
-    localStorage.setItem("taste-trek-user", JSON.stringify(user));
-    localStorage.setItem("taste-trek-session", JSON.stringify({
-      token: `token-${Date.now()}`,
-      userId: user.id,
-      signedInAt: new Date().toISOString(),
-    }));
+      const newUser = {
+        id: `user-${Date.now()}`,
+        email,
+        firstName: name.split(" ")[0],
+        lastName: name.split(" ").slice(1).join(" "),
+        password: btoa(password), // Basic encoding (NOT for production)
+        profileImageUrl: `https://avatar.vercel.sh/${encodeURIComponent(email)}`,
+        createdAt: new Date().toISOString(),
+      };
+
+      // Add to users registry
+      allUsers.push(newUser);
+      localStorage.setItem("taste-trek-users", JSON.stringify(allUsers));
+
+      // Create session
+      localStorage.setItem("taste-trek-user", JSON.stringify(newUser));
+      localStorage.setItem("taste-trek-session", JSON.stringify({
+        token: `token-${Date.now()}`,
+        userId: newUser.id,
+        signedInAt: new Date().toISOString(),
+      }));
+    }
 
     // Save email and name for next login
     localStorage.setItem("taste-trek-credentials", JSON.stringify({

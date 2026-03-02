@@ -50,7 +50,8 @@ async function logout(): Promise<void> {
     console.error("Logout error:", error);
   }
   
-  // Clear local storage
+  // Clear only session and current user, NOT the users registry
+  // This allows users to sign back in with their registered accounts
   localStorage.removeItem(LOCAL_USER_KEY);
   localStorage.removeItem(SESSION_KEY);
   
