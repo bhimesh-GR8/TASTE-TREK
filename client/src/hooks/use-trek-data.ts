@@ -84,6 +84,26 @@ export function useCulturalSites(destinationId: number) {
   });
 }
 
+// --- Country-level restaurants ---
+export function useCountryRestaurants(countryId: number) {
+  return useQuery({
+    queryKey: ["country-restaurants", countryId],
+    enabled: !!countryId,
+    queryFn: async () => {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      const destIds = mockDestinationsData
+        .filter(d => d.countryId === countryId)
+        .map(d => d.id);
+      return mockRestaurantsData
+        .filter(r => destIds.includes(r.destinationId))
+        .map(r => {
+          const dest = mockDestinationsData.find(d => d.id === r.destinationId);
+          return { ...r, destinationName: dest?.name };
+        });
+    },
+  });
+}
+
 // --- Search ---
 export function useSearch(query: string) {
   return useQuery({
@@ -131,7 +151,25 @@ export function useFavorites() {
     queryFn: async () => {
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 50));
-      return getLocalFavorites();
+      const favs = getLocalFavorites();
+
+      // enrich each favourite with the actual item data so UI can render names, images, etc.
+      return favs.map(fav => {
+        let item: any = null;
+        if (fav.itemType === "country") {
+          item = mockCountriesData.find(c => c.id === fav.itemId) || null;
+        } else {
+          const dest = mockDestinationsData.find(d => d.id === fav.itemId) || null;
+          item = dest;
+          if (dest) {
+            const country = mockCountriesData.find(c => c.id === dest.countryId);
+            if (country) {
+              (item as any).countryName = country.name;
+            }
+          }
+        }
+        return { ...fav, item };
+      });
     },
   });
 }

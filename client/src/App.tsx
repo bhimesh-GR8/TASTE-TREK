@@ -12,6 +12,7 @@ import Countries from "@/pages/Countries";
 import CountryDetail from "@/pages/CountryDetail";
 import DestinationDetail from "@/pages/DestinationDetail";
 import Favorites from "@/pages/Favorites";
+import FoodGuide from "@/pages/FoodGuide";
 import { SignIn } from "@/pages/SignIn";
 
 function Router() {
@@ -35,6 +36,7 @@ function Router() {
           <Route path="/" component={Home} />
           <Route path="/countries" component={Countries} />
           <Route path="/country/:id" component={CountryDetail} />
+          <Route path="/country/:id/food" component={FoodGuide} />
           <Route path="/destination/:id" component={DestinationDetail} />
           <Route path="/favorites" component={Favorites} />
           <Route path="/sign-in" component={SignIn} />

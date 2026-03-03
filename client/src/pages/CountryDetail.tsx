@@ -118,8 +118,8 @@ export default function CountryDetail() {
                 Embark on a culinary journey through {country.name}. From street food stalls to fine dining, 
                 experience the authentic flavors that define this region. Don't leave without trying the local specialties!
               </p>
-              <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                View Food Guide
+              <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                <Link href={`/country/${country.id}/food`}>View Food Guide</Link>
               </Button>
             </div>
             <div className="flex-1 relative">
