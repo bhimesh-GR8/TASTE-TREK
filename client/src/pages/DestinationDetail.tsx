@@ -29,6 +29,22 @@ export default function DestinationDetail() {
   const { data: favoriteStatus } = useCheckFavorite("destination", id);
   const { add, remove } = useToggleFavorite();
 
+  // download guide handler
+  const handleDownload = () => {
+    if (!destination) return;
+    const text = `Guide for ${destination.name}\n\n${destination.description}`;
+    const blob = new Blob([text], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${destination.name || "destination"}-guide.txt`;
+    // append to DOM for browsers that require it
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   const isFavorite = favoriteStatus?.isFavorite;
   const favoriteId = favoriteStatus?.favoriteId;
 
@@ -50,19 +66,9 @@ export default function DestinationDetail() {
         itemId: id,
         itemType: "destination" as const,
       };
-      
-      // Also store country name in localStorage for display
-      const favorites = JSON.parse(localStorage.getItem("taste-trek-favorites") || "[]");
-      const newFav = {
-        id: Math.max(...favorites.map((f: any) => f.id || 0), 0) + 1,
-        ...favorite,
-        countryName: country?.name,
-        name: destination?.name,
-        image: destination?.image,
-      };
-      favorites.push(newFav);
-      localStorage.setItem("taste-trek-favorites", JSON.stringify(favorites));
-      
+
+      // Use the mutation to update favorites; metadata will be
+      // resolved when the list is rendered rather than storing it here.
       add.mutate(favorite);
       toast({
         title: "Added to favorites!",
@@ -278,22 +284,16 @@ export default function DestinationDetail() {
           {/* Sidebar / Map Placeholder */}
           <div className="lg:col-span-1">
             <div className="sticky top-24 space-y-8">
-              <div className="bg-card rounded-2xl p-6 border border-border/50 shadow-sm">
-                <h3 className="font-bold mb-4">Location</h3>
-                {/* Placeholder Map */}
-                <div className="bg-muted rounded-xl h-48 w-full flex items-center justify-center text-muted-foreground mb-4 relative overflow-hidden group">
-                  <div className="absolute inset-0 bg-[url('https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/-122.4241,37.78,14.25,0,60/600x600?access_token=YOUR_TOKEN')] bg-cover opacity-50 grayscale group-hover:grayscale-0 transition-all" />
-                  <span className="relative z-10 font-medium">Map View</span>
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  Located in the heart of the region, {destination.name} is accessible via major transport links.
-                </div>
-              </div>
-
-              <div className="bg-gradient-to-br from-primary to-primary/80 rounded-2xl p-6 text-primary-foreground shadow-lg shadow-primary/25">
+                  <div className="bg-gradient-to-br from-primary to-primary/80 rounded-2xl p-6 text-primary-foreground shadow-lg shadow-primary/25">
                 <h3 className="font-bold text-xl mb-2">Plan Your Visit</h3>
                 <p className="text-white/80 mb-6 text-sm">Get a curated itinerary for your trip to {destination.name}.</p>
-                <Button variant="secondary" className="w-full font-semibold text-primary">Download Guide</Button>
+                <Button
+                  variant="secondary"
+                  className="w-full font-semibold text-primary"
+                  onClick={handleDownload}
+                >
+                  Download Guide
+                </Button>
               </div>
             </div>
           </div>
