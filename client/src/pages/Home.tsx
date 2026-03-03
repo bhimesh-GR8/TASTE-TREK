@@ -260,12 +260,16 @@ export default function Home() {
             Join thousands of food travelers sharing their favorite spots and hidden gems.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 text-lg px-8 rounded-full h-14">
-              Start Planning Now
-            </Button>
-            <Button size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/10 h-14 rounded-full px-8">
-              Browse Locations
-            </Button>
+            <Link href="/favorites">
+              <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 text-lg px-8 rounded-full h-14">
+                Start Planning Now
+              </Button>
+            </Link>
+            <Link href="/countries">
+              <Button size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/10 h-14 rounded-full px-8">
+                Browse Locations
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
